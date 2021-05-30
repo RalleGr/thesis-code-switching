@@ -1,0 +1,5 @@
+{
+    "cpus-per-task": "8",
+    "hours": "10",
+    "partition": "red"
+}

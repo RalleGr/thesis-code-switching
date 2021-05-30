@@ -1,0 +1,22 @@
+{
+    "lang1": ["en"],
+    "lang2": ["hi-ro"],
+    "model": ["top_n"],
+    "architecture": ["simple_rnn"],
+    "units": ["64"],
+    "embedding": ["fasttext_bilingual"],
+    "optimizer": ["sgd"],
+    "learning_rate": ["0.01"],
+    "epochs": ["50"],
+    "batch_size": ["32"],
+    "momentum": ["0.9"],
+    "gpu": "1",
+    "log": "0",
+    "mixed": "1",
+    "nr_of_batches": [],
+    "incv_epochs": [],
+    "incv_iter": [],
+    "remove_ratio": [],
+    "eta_lr": [],
+    "pretrained_model_name": []
+}
