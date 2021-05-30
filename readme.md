@@ -27,7 +27,7 @@ For using embeddings from pre-trained BERT models, install:
 Requirements for CUDA:
 https://www.tensorflow.org/install/gpu#software_requirements
 
-## Train viterbi and create ``fasttext_bilingual`` embeddings
+## Train viterbi and create embeddings
 1. Choose a language pair e.g ```en``` and ```es```
 2. Run the following files for training viterbi using :
 ```python
