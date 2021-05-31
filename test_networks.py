@@ -5,9 +5,11 @@
 # May 2021
 #############################################################
 from tools.utils import read_lince_unlabeled_data
+from tools.utils import read_lince_labeled_data
 from tools.utils import save_predictions
 from tools.utils import is_other
 from tools.utils import print_status
+from models.network.bilstm import BiLSTM
 import numpy as np
 import sys
 import os
@@ -46,9 +48,10 @@ def extract_features(sentences):
 
 lang1 = sys.argv[1]
 lang2 = sys.argv[2]
-embedding_type = sys.argv[3]
-model_name = sys.argv[4]
-use_gpu = 0
+dataset = sys.argv[3]
+embedding_type = sys.argv[4]
+model_name = sys.argv[5]
+use_gpu = True
 
 if use_gpu:
 	# Set GPU parameters if available
@@ -66,15 +69,45 @@ if use_gpu:
 else:
 	os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+if (lang2 == 'es'):
+	s_max_length = 83
+	if ('incv' in model_name):
+		s_max_length = 34
+elif (lang2 == 'hi-ro'):
+	s_max_length = 247
+elif (lang2 == 'ne-ro'):
+	s_max_length = 39
+elif (lang2 == 'arz'):
+	s_max_length = 37
+	if ('incv' in model_name):
+		s_max_length = 32
 
 # Load trained model
 model_filepath = 'models/train_models/' + model_name
-model = keras.models.load_model(model_filepath)
+try:
+	model = keras.models.load_model(model_filepath)
+except:
+	if (lang2 == 'hi-ro' or lang2 == 'ne-ro'):
+		input_char_shape = [s_max_length, 880]
+		input_word_shape = [s_max_length, 100]
+		model = BiLSTM(input_char_shape,input_word_shape,optimizer='adam',embedding_type='fasttext_bilingual',main_output_lstm_units=64,learning_rate=0.01,momentum=0.9,return_optimizer=False)
+		model.load_weights(model_filepath)
 print_status("Trained model loaded")
 
 # Load test data
-filepath = 'datasets/bilingual-annotated/' + lang1 + '-' + lang2 + '/test.conll'
-_, test_sentences = read_lince_unlabeled_data(filepath)
+if (dataset == 'test'):
+	filepath = 'datasets/bilingual-annotated/' + lang1 + '-' + lang2 + '/test.conll'
+	_, test_sentences = read_lince_unlabeled_data(filepath)
+elif (dataset == 'dev'):
+	filepath = 'datasets/bilingual-annotated/' + lang1 + '-' + lang2 + '/dev.conll'
+	_, _, test_sentences_tuples = read_lince_labeled_data(filepath)
+	test_sentences = []
+	for i in range(0, len(test_sentences_tuples)):
+		test_s = []
+		if (len(test_sentences_tuples[i]) > 0):
+			for w, l in test_sentences_tuples[i]:
+				test_s.append(w)
+		test_sentences.append(test_s)
 print_status("Test data loaded")
 
 # Load embeddings model
@@ -151,15 +184,6 @@ for s in test_sentences:
 				idx += subwords_count
 
 # Pad sequences
-if (lang2 == 'es'):
-	s_max_length = 83
-elif (lang2 == 'hi-ro'):
-	s_max_length = 247
-elif (lang2 == 'ne-ro'):
-	s_max_length = 39
-elif (lang2 == 'arz'):
-	s_max_length = 37
-
 x_char_test = sequence.pad_sequences(x_char_test, maxlen=s_max_length, dtype='float32')
 x_word_test = sequence.pad_sequences(x_word_test, maxlen=s_max_length, dtype='float32')
 
@@ -202,4 +226,20 @@ for i in range(len(test_sentences)):
 
 		y.append(y_sentence)
 
-save_predictions(y, './results/predictions/' + lang1 + '-' + lang2 + '/predictions_test_' + model_name + '.txt')
+if (dataset == 'dev'):
+	y_index = 0
+	for i in range(0, len(test_sentences)):
+		if (len(test_sentences[i]) > 0):
+			for j in range(0, len(test_sentences[i])):
+				y[y_index][j] = (test_sentences[i][j], y[y_index][j]) # for dev, save token + prediction. mixed, ne, etc. classes are skipped
+			y_index += 1
+
+predictions_filepath= './predictions/' + dataset + '/' + lang1 + '-' + lang2 
+if not os.path.exists("./predictions/"):
+	os.mkdir("./predictions/")
+if not os.path.exists(f"./predictions/{dataset}"):
+	os.mkdir(f"./predictions/{dataset}")
+if not os.path.exists(f"./predictions/{dataset}/{lang1}-{lang2}"):
+	os.mkdir(f"./predictions/{dataset}/{lang1}-{lang2}")
+
+save_predictions(y, predictions_filepath + '/' + model_name + '.txt')

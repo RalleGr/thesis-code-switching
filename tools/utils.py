@@ -151,8 +151,11 @@ def save_predictions(predictions, file_name):
 	if (type(predictions) == list):
 		with open(file_name, 'w', encoding='utf-8') as f:
 			for sentence in predictions:
-				for label in sentence:
-					f.write("%s\n" % label)
+				for pred in sentence:
+					if (type(pred) is tuple):
+						f.write(f"{pred[0]} {pred[1]}\n")
+					else:
+						f.write(f"{pred}\n")
 				f.write("\n")
 	else:
 		with open(file_name, 'w', encoding='utf-8') as f:
