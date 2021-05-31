@@ -57,3 +57,14 @@ python3 train.py -h
 ```python 
 python3 test_networks.py [lang1] [lang2] [embedding] [model name]
 ```
+
+## Output predictions
+Predictions are saved in the ``predictions`` directory where sub directories are (depending on dataset used) ``dev`` or ``test``, and inside one of these subdirectories a folder named after the respective language pair e.g ``en-es``.
+
+- For the ``dev`` dataset, output prediction files have both words and predictions given by the model. 
+- For the ``test`` dataset, output prediction files only contain the predictions given by the model.
+
+_Happy code-switching_
+
+
+
